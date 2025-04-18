@@ -18,6 +18,9 @@ let data1;
 let data1json = [];
 let allBands1 = [];
 
+let svgFirstDraw = true;
+
+
 document.addEventListener('DOMContentLoaded', function () {} )
 {
     // on load do data preprocess as well as draw
@@ -32,9 +35,23 @@ document.addEventListener('DOMContentLoaded', function () {} )
 
             // draw data
             svg1 = d3.select("#svg1")
-            barChartDraw()
+            barChartDrawInitial()
         });
 }
+
+addEventListener("scroll", (event) => {});
+
+onscroll = (event) => {
+    console.log(window.scrollY)
+
+    // add scrolly events
+    if(window.scrollY > 1000 && window.scrollY < 1200 & svgFirstDraw)
+    {
+        console.log("animate bar chart")
+        barChartDrawBars()
+        svgFirstDraw = false
+    }
+};
 
 function parseFile()
 {
@@ -44,7 +61,7 @@ function parseFile()
     }
 }
 
-function barChartDraw()
+function barChartDrawInitial()
 {
     // get height and width of svg
     let svgWidth = svg1.style('width').replace('px','');
@@ -60,6 +77,7 @@ function barChartDraw()
 
     // set scales
     let bandScale1 = d3.scaleBand(allBands1, [margin, svgWidth - margin])
+        .padding(0.2)
 
     let maxSales = 0;
     for(let i = 0; i < data1.length; i++)
@@ -80,28 +98,69 @@ function barChartDraw()
 
     // draw scales
     svg1.append("g")
-        .attr("transform", "translate(0," + (svgHeight - margin) + ")")
+        .attr("transform", "translate(0," + (svgHeight - (margin/2)) + ")")
         .call(d3.axisBottom(bandScale1))
         .selectAll("text")
             .attr("transform", "translate(-10,0)rotate(-35)")
             .style("text-anchor", "end")
             .attr("font-family", "Lobster, cursive")
     svg1.append("g")
-        .attr("transform", "translate(" + margin + ","  + (-margin) + ")    ")
+        .attr("transform", "translate(" + margin + ","  + (-margin/2) + ")    ")
         .call(d3.axisLeft(yScale))
 
+}
+
+function barChartDrawBars()
+{
+    // get height and width of svg
+    let svgWidth = svg1.style('width').replace('px','');
+    let svgHeight = svg1.style('height').replace('px','');
+
+    // amount of pixels from edges of svg 
+    let margin = 100;
+    
+    svgWidth = parseInt(svgWidth)
+    svgHeight = parseInt(svgHeight)
+
+    console.log(svgHeight)
+
+    // set scales
+    let bandScale1 = d3.scaleBand(allBands1, [margin, svgWidth - margin])
+        .padding(0.2)
+
+    let maxSales = 0;
+    for(let i = 0; i < data1.length; i++)
+    {
+        console.log(parseFloat(data1[i].Sales))
+        if(parseFloat(data1[i].Sales) > maxSales)
+        {
+            maxSales = parseFloat(data1[i].Sales)
+        }
+    }
+    console.log(maxSales)
+
+    let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight, margin])
+
+    let colorScale = d3.scaleOrdinal()
+        .domain(["Gran", "Speed", "Mario"])
+        .range(["green", "blue", "red"])
+
+    // draw bars
 
     svg1.selectAll("bars")
         .data(data1)
         .join(
             enter => enter.append("rect")
-                .attr("x", function(d) {return bandScale1(d.Title)})
-                .attr("y", function(d) {return yScale(d.Sales)})
+                .attr("x", function(d) {return (bandScale1(d.Title) + 10) })
+                .attr("y", function(d) {return (svgHeight - (margin/2))})
                 .attr("width", 10)
-                .attr("height", function(d) {return svgHeight - yScale(d.Sales)})
-                .attr("fill", function(d) {return colorScale(d.Type)}),
+                .attr("fill", function(d) {return colorScale(d.Type)})
+                .attr("stroke", "black")
+                .transition()
+                .duration(750)
+                .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
+                .attr("height", function(d) {return (svgHeight - yScale(d.Sales))}),
             update => update,
             exit => exit
         )
-
 }
