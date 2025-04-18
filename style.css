@@ -1,0 +1,39 @@
+.header
+{
+    width: 100%;
+    justify-content: center;
+    text-justify: center;
+    text-align: center;
+}
+
+.text1
+{
+    width: 100%;
+    justify-content: center;
+    text-justify: center;
+    text-align: center;
+}
+.vis1div
+{
+    height: 800px;
+}
+.vis2div
+{
+    height: 800px;
+}
+h1
+{
+
+}
+
+.svg1
+{
+    width: 700px;
+    height: 500px;
+}
+
+.svg2
+{
+    width: 700px;
+    height: 500px;
+}
