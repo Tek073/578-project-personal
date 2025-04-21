@@ -20,6 +20,8 @@ let allBands1 = [];
 
 let svgFirstDraw = true;
 
+let scroll = 0
+
 
 document.addEventListener('DOMContentLoaded', function () {} )
 {
@@ -42,14 +44,30 @@ document.addEventListener('DOMContentLoaded', function () {} )
 addEventListener("scroll", (event) => {});
 
 onscroll = (event) => {
-    console.log(window.scrollY)
+    let yPos = window.scrollY
 
+    let topGraphRect = document.getElementById("svg1").getBoundingClientRect();
+    let bodyRect = document.body.getBoundingClientRect();
+
+    let graphY = topGraphRect.top
+    let bodyY = bodyRect.top
+
+    console.log(graphY - bodyY)
+
+    // get top of html element
     // add scrolly events
-    if(window.scrollY > 1000 && window.scrollY < 1200 & svgFirstDraw)
+
+    if(graphY < 0)
     {
         console.log("animate bar chart")
         barChartDrawBars()
+        document.getElementsByTagName('body')[0].style.overflow = 'hidden';
+        window.scrollTo(0, graphY - bodyY)
         svgFirstDraw = false
+    }
+    if(!svgFirstDraw)
+    {
+        // lock position 
     }
 };
 
