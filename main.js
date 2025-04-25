@@ -18,31 +18,37 @@ let data1;
 let data1json = [];
 let allBands1 = [];
 
+let data2;
+
 let svgFirstDraw = true;
 
 
 document.addEventListener('DOMContentLoaded', function () {} )
 {
     // on load do data preprocess as well as draw
-    Promise.all([d3.csv('data1.csv')])
+    Promise.all([d3.csv('data1.csv'), d3.csv("track_wr.csv")])
         .then(function (values) {
             // have data loaded and look at values 
             
             data1 = values[0]
+            data2 = values[1]
 
             // sort data
             parseFile()
 
             // draw data
             svg1 = d3.select("#svg1")
+            svg2 = d3.select("#svg2")
             barChartDrawInitial()
+
+            wrTimesDraw()
         });
 }
 
 addEventListener("scroll", (event) => {});
 
 onscroll = (event) => {
-    console.log(window.scrollY)
+    // console.log(window.scrollY)
 
     // add scrolly events
     if(window.scrollY > 1000 && window.scrollY < 1200 & svgFirstDraw)
@@ -69,6 +75,7 @@ function barChartDrawInitial()
 
     // amount of pixels from edges of svg 
     let margin = 100;
+    let botMargin = 50;
     
     svgWidth = parseInt(svgWidth)
     svgHeight = parseInt(svgHeight)
@@ -90,7 +97,7 @@ function barChartDrawInitial()
     }
     console.log(maxSales)
 
-    let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight, margin])
+    let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight - botMargin, margin])
 
     let colorScale = d3.scaleOrdinal()
         .domain(["Gran", "Speed", "Mario"])
@@ -98,7 +105,7 @@ function barChartDrawInitial()
 
     // draw scales
     svg1.append("g")
-        .attr("transform", "translate(0," + (svgHeight - (margin/2)) + ")")
+        .attr("transform", "translate(0," + (svgHeight - botMargin - (margin/2)) + ")")
         .call(d3.axisBottom(bandScale1))
         .selectAll("text")
             .attr("transform", "translate(-10,0)rotate(-35)")
@@ -118,6 +125,7 @@ function barChartDrawBars()
 
     // amount of pixels from edges of svg 
     let margin = 100;
+    let botMargin = 50;
     
     svgWidth = parseInt(svgWidth)
     svgHeight = parseInt(svgHeight)
@@ -139,7 +147,7 @@ function barChartDrawBars()
     }
     console.log(maxSales)
 
-    let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight, margin])
+    let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight - botMargin, margin])
 
     let colorScale = d3.scaleOrdinal()
         .domain(["Gran", "Speed", "Mario"])
@@ -152,15 +160,34 @@ function barChartDrawBars()
         .join(
             enter => enter.append("rect")
                 .attr("x", function(d) {return (bandScale1(d.Title) + 10) })
-                .attr("y", function(d) {return (svgHeight - (margin/2))})
+                .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
                 .attr("width", 10)
                 .attr("fill", function(d) {return colorScale(d.Type)})
                 .attr("stroke", "black")
                 .transition()
                 .duration(750)
                 .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
-                .attr("height", function(d) {return (svgHeight - yScale(d.Sales))}),
+                .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))}),
             update => update,
             exit => exit
         )
+}
+
+
+// second svg draw
+function wrTimesDraw()
+{
+    let svgWidth = svg1.style('width').replace('px','');
+    let svgHeight = svg1.style('height').replace('px','');
+
+    // amount of pixels from edges of svg 
+    let margin = 100;
+
+    for(let i = 0; i < data2.length; i++)
+    {
+        console.log(data2[i]["Time"])
+    }
+    
+    // parse data for date and time scales
+
 }
