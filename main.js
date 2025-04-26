@@ -22,6 +22,11 @@ let data2;
 let data2Split = [];
 let currentLineIndex = 0
 let lineDrawData;
+let imageLocs = [
+    {name : "mariostadium.png"}, {name: "mariocircuit.png"}, {name: "sunshineairport.png"},
+    {name: "bonedrydune.png"}, {name: "mutecity.png"}, {name: "bigblue.png"}, {name: "cheeseland.png"},
+    {name: "dragondriftway.png"}, {name: "superbell.png"}, {name: "rainbowroad.png"} 
+]
 
 let yScaleWrChart;
 let xScaleWrChart;
@@ -229,6 +234,8 @@ function parseWRData()
         let parseTime = parseFloat(totalSecs + "." + milli)
         data2[i]["Time"] = parseTime
 
+        // change png data
+
 
         if(data2[i]["Track"] != currentTrack)
         {
@@ -400,6 +407,7 @@ function updateLineChart()
     let lineDraw = svg2.selectAll(".line")
         .data([lineDrawData])
     let titleDraw = svg2.selectAll("text")
+    let pngDraw = svg2.selectAll("image")
 
     lineDraw.enter()
         .append("path")
@@ -415,7 +423,8 @@ function updateLineChart()
                 .x(function(d) { return xScaleWrChart(new Date(d["Date"])) })
                 .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
                 )
-            
+      
+    // draw into title
     titleDraw
         .data(lineDrawData)
         .join(
@@ -442,8 +451,35 @@ function updateLineChart()
             exit => exit.remove()
     )
     
-        
-        
+    // finally draw images
+    console.log(imageLocs[currentLineIndex]["name"])
+    let name = [imageLocs[currentLineIndex]["name"]]
+
+    pngDraw
+        .data(name)
+        .join(
+            enter => enter.append("image")
+                .attr("href", function(d) {return "track_pngs/" + d})
+                .attr("x", 350)
+                .attr("y", 150)
+                .attr("width", 200)
+                .attr("height", 200)
+                .attr("stroke", "black")
+                .transition()
+                .duration(2000)
+                .style("opacity", 1),
+            update => update
+                .transition()
+                .duration(2000)
+                .style("opacity", 1)
+                .attr("stroke", "black")
+                .attr("href", function(d) {return "track_pngs/" + d}),
+            exit => exit
+                .transition()
+                .duration(2000)
+                .style("opacity", 0)
+                .remove()
+        )
 
     // draw title for track and also put in png for track 
 }
