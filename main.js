@@ -19,6 +19,14 @@ let data1json = [];
 let allBands1 = [];
 
 let data2;
+let data2Split = [];
+let currentLineIndex = 0
+let lineDrawData;
+
+let yScaleWrChart;
+let yAxisDraw;
+
+let forwardButton = document.getElementById("forwardButton")
 
 let svgFirstDraw = true;
 
@@ -41,7 +49,8 @@ document.addEventListener('DOMContentLoaded', function () {} )
             svg2 = d3.select("#svg2")
             barChartDrawInitial()
 
-            wrTimesDraw()
+            parseWRData()
+            initialWrTimesDraw()
         });
 }
 
@@ -58,6 +67,14 @@ onscroll = (event) => {
         svgFirstDraw = false
     }
 };
+
+function forwardClick()
+{
+    console.log("for click")
+    currentLineIndex = currentLineIndex + 1
+    updateLineChart()
+}
+
 
 function parseFile()
 {
@@ -175,19 +192,175 @@ function barChartDrawBars()
 
 
 // second svg draw
-function wrTimesDraw()
+function initialWrTimesDraw()
 {
-    let svgWidth = svg1.style('width').replace('px','');
-    let svgHeight = svg1.style('height').replace('px','');
+    let svgWidth = svg2.style('width').replace('px','');
+    let svgHeight = svg2.style('height').replace('px','');
 
     // amount of pixels from edges of svg 
     let margin = 100;
 
+    console.log(data2Split)
+
+    // set data to draw
+    lineDrawData = data2Split[currentLineIndex]
+
+    // parse data for date and time scales
+    let maxTime = 0;
+    let minTime = 300;
+
+    for(let i = 0; i < lineDrawData.length; i++)
+    {
+        let time = lineDrawData[i]["Time"].replace("\"", ".")
+        let mins = time.substring(0, 1)
+        let secs = time.substring(2, 4)
+        let milli = time.substring(5, 8)
+
+        let totalSecs = (parseInt(mins) * 60) + parseInt(secs)
+        let parseTime = parseFloat(totalSecs + "." + milli)
+        lineDrawData[i]["Time"] = parseTime
+        
+        if(parseTime > maxTime)
+        {
+            maxTime = parseTime
+        }
+        if(parseTime < minTime)
+        {
+            minTime = parseTime
+        }
+    }
+    yScaleWrChart = d3.scaleLinear([minTime, maxTime], [svgHeight, margin])
+
+    let maxDate = new Date("1900-01-01")
+    let minDate = new Date("2030-01-01")
+
+    for(let i = 0; i < lineDrawData.length; i++)
+    {
+        let date = new Date(lineDrawData[i]["Date"])
+        // console.log(date)
+
+        if(date.getTime() > maxDate.getTime())
+        {
+            maxDate = date
+        }
+        if(date.getTime() < minDate.getTime())
+        {
+            minDate = date
+        }
+    }
+
+    console.log(minDate + "\n" + maxDate)
+    xScale = d3.scaleTime([minDate, maxDate], [margin, svgWidth - margin])
+
+    svg2.append("g")
+        .attr("transform", "translate(0," + (svgHeight - (margin/2)) + ")")
+        .call(d3.axisBottom(xScale))
+        .selectAll("text")
+            .attr("transform", "translate(-10,0)rotate(-35)")
+            .style("text-anchor", "end")
+            .attr("font-family", "Lobster, cursive")
+    yAxisDraw = svg2.append("g")
+        .attr('class', 'y-axis') 
+        .attr("transform", "translate(" + (svgWidth - margin) + ","  + (-margin/2) + ")    ")
+        .call(d3.axisRight(yScaleWrChart).ticks(10))
+
+
+    for(let i = 0; i < lineDrawData.length; i++)
+    {
+        console.log(lineDrawData[i]["Date"])
+        console.log(xScale(new Date(lineDrawData[i]["Date"])))
+
+        console.log(lineDrawData[i]["Time"])
+        console.log(yScaleWrChart((lineDrawData[i]["Time"])))
+    }
+
+    svg2.append("path")
+        .datum(lineDrawData)
+        .attr("fill", "none")
+        .attr("stroke", "lightgreen")
+        .attr("stroke-width", 5.5)
+        .attr("class", "line")
+        .attr("d", d3.line()
+          .x(function(d) { return xScale(new Date(d["Date"])) })
+          .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
+          )
+
+    svg2.selectAll("path")
+        .data(lineDrawData)
+        .join(
+            enter => enter.append("path").attr("class", "line"),
+            update => update,
+            exit => exit.remove()
+        )
+
+}
+    // do line draw
+function parseWRData()
+{
+
+    
+    let currentTrack = ""
+    let currentList = [];
+    currentList = data2
+
     for(let i = 0; i < data2.length; i++)
     {
-        console.log(data2[i]["Time"])
-    }
-    
-    // parse data for date and time scales
+        if(data2[i]["Track"] != currentTrack)
+        {
+            // push and then start new list
+            data2Split.push(currentList)
 
+            currentList = []
+            currentTrack = data2[i]["Track"]
+        }
+        else
+        {
+            currentList.push(data2[i])
+        }
+    }
+    data2Split.push(currentList)
+
+    let elemOne = data2Split.shift()
+    data2Split.push(elemOne)
+}
+
+function updateLineChart()
+{
+    let svgWidth = svg2.style('width').replace('px','');
+    let svgHeight = svg2.style('height').replace('px','');
+
+    lineDrawData = data2Split[currentLineIndex]
+    let margin = 100
+
+    // parse data for date and time scales
+    let maxTime = 0;
+    let minTime = 300;
+
+    for(let i = 0; i < lineDrawData.length; i++)
+    {
+        let time = lineDrawData[i]["Time"].replace("\"", ".")
+        let mins = time.substring(0, 1)
+        let secs = time.substring(2, 4)
+        let milli = time.substring(5, 8)
+
+        let totalSecs = (parseInt(mins) * 60) + parseInt(secs)
+        let parseTime = parseFloat(totalSecs + "." + milli)
+        lineDrawData[i]["Time"] = parseTime
+        
+        if(parseTime > maxTime)
+        {
+            maxTime = parseTime
+        }
+        if(parseTime < minTime)
+        {
+            minTime = parseTime
+        }
+    }
+    yScaleWrChart = d3.scaleLinear([minTime, maxTime], [svgHeight, margin])
+
+    console.log("Yfhslf")
+    yAxisDraw
+        .transition()
+        .duration(500)
+        .call(yScaleWrChart)
 }
