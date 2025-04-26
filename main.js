@@ -71,8 +71,21 @@ onscroll = (event) => {
 
 function forwardClick()
 {
-    console.log("for click")
     currentLineIndex = currentLineIndex + 1
+    if(currentLineIndex >= data2Split.length)
+    {
+        currentLineIndex = 0
+    }
+    updateLineChart()
+}
+
+function backwardClick()
+{
+    currentLineIndex = currentLineIndex - 1
+    if(currentLineIndex <= -1)
+    {
+        currentLineIndex = data2Split.length - 1
+    }
     updateLineChart()
 }
 
@@ -233,7 +246,6 @@ function parseWRData()
     data2Split.push(currentList)
 
     let elemOne = data2Split.shift()
-    data2Split.push(elemOne)
 }
 
 // second svg draw
@@ -387,6 +399,7 @@ function updateLineChart()
     
     let lineDraw = svg2.selectAll(".line")
         .data([lineDrawData])
+    let titleDraw = svg2.selectAll("text")
 
     lineDraw.enter()
         .append("path")
@@ -402,17 +415,35 @@ function updateLineChart()
                 .x(function(d) { return xScaleWrChart(new Date(d["Date"])) })
                 .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
                 )
-
-    // svg2.append("path")
-    //     .datum(lineDrawData)
-    //     .join("path")
-    //     .attr("fill", "none")
-    //     .attr("stroke", "lightgreen")
-    //     .attr("stroke-width", 5.5)
-    //     .attr("class", "line")
-    //     .attr("d", d3.line()
-    //         .x(function(d) { return xScaleWrChart(new Date(d["Date"])) })
-    //         .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
-    //         )
+            
+    titleDraw
+        .data(lineDrawData)
+        .join(
+            enter => enter.append("text")
+                .attr("x", 300)
+                .attr("y", 100)
+                .attr("fill", "black")
+                .attr("text-anchor", "middle")
+                .attr("font-family", "Comic Sans MS, cursive, sans-serif")
+                .attr("font-size", "32px")
+                .text(function(d) {return (d["Track"])})
+                .append("tspan")
+                .attr("text-anchor", "middle")
+                .attr("x", 300)
+                .attr("y", 150)
+                .text("WR Times"),
+            update => update
+                .text(function(d) {return (d["Track"])})
+                .append("tspan")
+                .attr("text-anchor", "middle")
+                .attr("x", 300)
+                .attr("y", 150)
+                .text("WR Times"),
+            exit => exit.remove()
+    )
     
+        
+        
+
+    // draw title for track and also put in png for track 
 }
