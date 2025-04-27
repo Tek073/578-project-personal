@@ -327,6 +327,15 @@ function initialWrTimesDraw()
     console.log(minDate + "\n" + maxDate)
     xScaleWrChart = d3.scaleTime([minDate, maxDate], [margin, svgWidth - margin])
 
+    svg2.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("fill", "rgb(235, 198, 52)")
+        .attr("stroke", "black")
+        .style("opacity", 0.4)
+
     svg2.append("g")
         .attr("class", "x-axis")
         .attr("transform", "translate(0," + (svgHeight - (margin/2)) + ")")
@@ -337,6 +346,12 @@ function initialWrTimesDraw()
         .call(d3.axisRight(yScaleWrChart).ticks(10))
 
 
+    // draw labels static
+    svg2.append("text")
+        .attr("font-family", "Comic Sans MS, cursive, sans-serif")
+        .attr("x", 540)
+        .attr("y", 45)
+        .text("Time (seconds)")
 }
 
 
