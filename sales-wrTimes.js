@@ -14,9 +14,16 @@
 let svg1;
 let svg2;
 
+let barData;
+
 let data1;
 let data1json = [];
 let allBands1 = [];
+
+let data3;
+let salesCombined = 0;
+
+let firstBar = true;
 
 let data2;
 let data2Split = [];
@@ -39,12 +46,14 @@ let svgFirstDraw = true;
 document.addEventListener('DOMContentLoaded', function () {} )
 {
     // on load do data preprocess as well as draw
-    Promise.all([d3.csv('sales-all.csv'), d3.csv("track_wr.csv")])
+    Promise.all([d3.csv('sales-all.csv'), d3.csv("track_wr.csv"), d3.csv("sales-combined.csv")])
         .then(function (values) {
             // have data loaded and look at values 
             
             data1 = values[0]
             data2 = values[1]
+            data3 = values[2]
+            barData = data1
 
             // sort data
             parseFile()
@@ -73,7 +82,7 @@ onscroll = (event) => {
     }
 };
 
-function forwardClick()
+function forwardClickWr()
 {
     currentLineIndex = currentLineIndex + 1
     if(currentLineIndex >= data2Split.length)
@@ -83,7 +92,7 @@ function forwardClick()
     updateLineChart()
 }
 
-function backwardClick()
+function backwardClickWr()
 {
     currentLineIndex = currentLineIndex - 1
     if(currentLineIndex <= -1)
@@ -93,19 +102,32 @@ function backwardClick()
     updateLineChart()
 }
 
+function merge()
+{
+    if(salesCombined == 0)
+    {
+        salesCombined = 1
+        barData = data3
+    }
+    else
+    {
+        salesCombined = 0
+        barData = data1
+    }
+    parseFile()
+    barChartDrawBars()
+}
+
 
 function parseFile()
 {
-    for(let i = 0; i < data1.length; i++)
+    allBands1 = []
+    for(let i = 0; i < barData.length; i++)
     {
-        allBands1.push(data1[i].Title)
+        allBands1.push(barData[i].Title)
     }
 }
 
-function updateSalesChart()
-{
-
-}
 
 function barChartDrawInitial()
 {
@@ -120,22 +142,19 @@ function barChartDrawInitial()
     svgWidth = parseInt(svgWidth)
     svgHeight = parseInt(svgHeight)
 
-    console.log(svgHeight)
 
     // set scales
     let bandScale1 = d3.scaleBand(allBands1, [margin, svgWidth - margin])
         .padding(0.2)
 
     let maxSales = 0;
-    for(let i = 0; i < data1.length; i++)
+    for(let i = 0; i < barData.length; i++)
     {
-        console.log(parseFloat(data1[i].Sales))
-        if(parseFloat(data1[i].Sales) > maxSales)
+        if(parseFloat(barData[i].Sales) > maxSales)
         {
-            maxSales = parseFloat(data1[i].Sales)
+            maxSales = parseFloat(barData[i].Sales)
         }
     }
-    console.log(maxSales)
 
     let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight - botMargin, margin])
 
@@ -143,8 +162,29 @@ function barChartDrawInitial()
         .domain(["Gran", "Speed", "Mario"])
         .range(["green", "blue", "red"])
 
+    svg1.append("image")
+        .attr("href", function(d) {return "chart_backgrounds/salesBackground.PNG"})
+        .attr("x", 110)
+        .attr("y", 80)
+        .attr("width", 500)
+        .attr("height", 400)
+
+    svg1.append("text")
+        .text("Sales (Millions)")
+        .attr("x", -300)
+        .attr("y", 50)
+        .attr("transform", "translate(0,0)rotate(-90)")
+        .attr("font-family", "Lobster, cursive")
+
+    svg1.append("text")
+        .text("Sales per Game in Millions")
+        .attr("x", 350)
+        .attr("y", 80)
+        .attr("font-family", "Lobster, cursive")
+
     // draw scales
     svg1.append("g")
+        .attr("class", "x-axis")
         .attr("transform", "translate(0," + (svgHeight - botMargin - (margin/2)) + ")")
         .call(d3.axisBottom(bandScale1))
         .selectAll("text")
@@ -152,6 +192,7 @@ function barChartDrawInitial()
             .style("text-anchor", "end")
             .attr("font-family", "Lobster, cursive")
     svg1.append("g")
+        .attr("class", "y-axis")
         .attr("transform", "translate(" + margin + ","  + (-margin/2) + ")    ")
         .call(d3.axisLeft(yScale))
 
@@ -159,6 +200,7 @@ function barChartDrawInitial()
 
 function barChartDrawBars()
 {
+
     // get height and width of svg
     let svgWidth = svg1.style('width').replace('px','');
     let svgHeight = svg1.style('height').replace('px','');
@@ -170,22 +212,19 @@ function barChartDrawBars()
     svgWidth = parseInt(svgWidth)
     svgHeight = parseInt(svgHeight)
 
-    console.log(svgHeight)
 
     // set scales
     let bandScale1 = d3.scaleBand(allBands1, [margin, svgWidth - margin])
         .padding(0.2)
 
     let maxSales = 0;
-    for(let i = 0; i < data1.length; i++)
+    for(let i = 0; i < barData.length; i++)
     {
-        console.log(parseFloat(data1[i].Sales))
-        if(parseFloat(data1[i].Sales) > maxSales)
+        if(parseFloat(barData[i].Sales) > maxSales)
         {
-            maxSales = parseFloat(data1[i].Sales)
+            maxSales = parseFloat(barData[i].Sales)
         }
     }
-    console.log(maxSales)
 
     let yScale = d3.scaleLinear([0, maxSales] ,[svgHeight - botMargin, margin])
 
@@ -193,24 +232,86 @@ function barChartDrawBars()
         .domain(["Gran", "Speed", "Mario"])
         .range(["green", "blue", "red"])
 
+    // recall scales
+    svg1.selectAll(".y-axis")
+        .attr("transform", "translate(" + margin + ","  + (-margin/2) + ")    ")
+        .transition()
+        .duration(2000)
+        .call(d3.axisLeft(yScale))
+
+    svg1.selectAll(".x-axis")
+        .transition()
+        .duration(2000)
+        .call(d3.axisBottom(bandScale1))
+        .selectAll("text")
+            .attr("transform", "translate(-10,0)rotate(-35)")
+            .style("text-anchor", "end")
+            .attr("font-family", "Lobster, cursive")
+
     // draw bars
 
-    svg1.selectAll("bars")
-        .data(data1)
-        .join(
-            enter => enter.append("rect")
-                .attr("x", function(d) {return (bandScale1(d.Title) + 10) })
-                .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
-                .attr("width", 10)
-                .attr("fill", function(d) {return colorScale(d.Type)})
-                .attr("stroke", "black")
-                .transition()
-                .duration(750)
-                .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
-                .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))}),
-            update => update,
-            exit => exit
-        )
+    var bars = svg1.selectAll("rect")
+        .data(barData)
+
+
+    
+    // had it a differnt way but decided to follow d3 example page instead
+
+    if(firstBar)
+    {
+        bars.join("rect")
+            .attr("x", function(d) {return (bandScale1(d.Title)) })
+            .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
+            .attr("width", bandScale1.bandwidth())
+            .attr("fill", function(d) {return colorScale(d.Type)})
+            .attr("stroke", "black")
+            .transition()
+            .duration(750)
+            .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
+            .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))})
+            .delay(function(d,i){return(i*50)})
+            firstBar = false
+    }
+    else
+    {
+        bars.join("rect")
+            .attr("x", function(d) {return (bandScale1(d.Title)) })
+            .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
+            .attr("width", bandScale1.bandwidth())
+            .attr("fill", function(d) {return colorScale(d.Type)})
+            .attr("stroke", "black")
+            .transition()
+            .duration(750)
+            .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
+            .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))})
+            .delay(function(d,i){ return(i*50)})
+    }
+
+    // bars.join(
+    //     enter => enter.append("rect")
+    //         .attr("class", "bars")
+    //         .attr("x", function(d) {return (bandScale1(d.Title)) })
+    //         .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
+    //         .attr("width", bandScale1.bandwidth())
+    //         .attr("fill", function(d) {return colorScale(d.Type)})
+    //         .transition()
+    //         .duration(750)
+    //         .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
+    //         .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))})
+    //         .delay(function(d,i){console.log(i) ; return(i*100)}),
+    //     update => update
+    //         .attr("class", "bars")
+    //         .attr("x", function(d) {return (bandScale1(d.Title)) })
+    //         .attr("y", function(d) {return (svgHeight - botMargin - (margin/2))})
+    //         .attr("width", bandScale1.bandwidth())
+    //         .attr("fill", function(d) {return colorScale(d.Type)})
+    //         .transition()
+    //         .duration(750)
+    //         .attr("y", function(d) {return (yScale(d.Sales) - (margin/2))})
+    //         .attr("height", function(d) {return (svgHeight - botMargin - yScale(d.Sales))})
+    //         .delay(function(d,i){console.log(i) ; return(i*100)}),
+    //     exit => exit.remove()
+    //     )
 }
 
 function parseWRData()
@@ -262,8 +363,6 @@ function initialWrTimesDraw()
 
     // amount of pixels from edges of svg 
     let margin = 100;
-
-    console.log(data2Split)
 
     // set data to draw
     lineDrawData = data2Split[currentLineIndex]
@@ -323,7 +422,6 @@ function initialWrTimesDraw()
         }
     }
 
-    console.log(minDate + "\n" + maxDate)
     xScaleWrChart = d3.scaleTime([minDate, maxDate], [margin, svgWidth - margin])
 
     // svg2.append("rect")
@@ -334,6 +432,14 @@ function initialWrTimesDraw()
     //     .attr("fill", "rgb(235, 198, 52)")
     //     .attr("stroke", "black")
     //     .style("opacity", 0.4)
+
+    svg2.append("image")
+        .attr("class", "background")
+        .attr("href", function(d) {return "chart_backgrounds/wrBackground.PNG"})
+        .attr("x", 120)
+        .attr("y", 120)
+        .attr("width", 400)
+        .attr("height", 400)
 
     svg2.append("g")
         .attr("class", "x-axis")
@@ -383,7 +489,7 @@ function updateLineChart()
         }
     }
 
-    console.log(minDate + "\n" + maxDate)
+    // console.log(minDate + "\n" + maxDate)
     xScaleWrChart.domain([minDate, maxDate])
     svg2.selectAll(".x-axis")
         .transition()
@@ -397,7 +503,7 @@ function updateLineChart()
     for(let i = 0; i < lineDrawData.length; i++)
     {
         let parseTime = lineDrawData[i]["Time"]
-        
+
         if(parseTime > maxTime)
         {
             maxTime = parseTime
@@ -407,7 +513,6 @@ function updateLineChart()
             minTime = parseTime
         }
     }
-    console.log(minTime + " " + maxTime)
 
     yScaleWrChart.domain([minTime, maxTime])
     svg2.selectAll(".y-axis")
@@ -415,13 +520,17 @@ function updateLineChart()
         .duration(2000)
         .call(d3.axisRight(yScaleWrChart))
     
-    // update the line
-    console.log(lineDrawData)
+    // update the lin
     
     let lineDraw = svg2.selectAll(".line")
         .data([lineDrawData])
+        
+    let lineDraw2 = svg2.selectAll(".line2")
+        .data([lineDrawData])
+
     let titleDraw = svg2.selectAll(".titleText")
-    let pngDraw = svg2.selectAll("image")
+    let pngDraw = svg2.selectAll(".image1")
+    let pngBackground = svg2.selectAll(".outline")
 
     lineDraw.enter()
         .append("path")
@@ -430,9 +539,24 @@ function updateLineChart()
         .transition()
         .duration(2000)
             .attr("fill", "none")
-            .attr("stroke", "lightgreen")
+            .attr("stroke", "black")
             .attr("stroke-width", 5.5)
             .attr("class", "line")
+            .attr("d", d3.line()
+                .x(function(d) { return xScaleWrChart(new Date(d["Date"])) })
+                .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
+                )
+        
+    lineDraw2.enter()
+        .append("path")
+        .attr("class", "line2")
+        .merge(lineDraw2)
+        .transition()
+        .duration(2000)
+            .attr("fill", "none")
+            .attr("stroke", "lightgreen")
+            .attr("stroke-width", 4.5)
+            .attr("class", "line2")
             .attr("d", d3.line()
                 .x(function(d) { return xScaleWrChart(new Date(d["Date"])) })
                 .y(function(d) { return (yScaleWrChart(d["Time"]) - (margin/2)) })
@@ -468,13 +592,14 @@ function updateLineChart()
     )
     
     // finally draw images
-    console.log(imageLocs[currentLineIndex]["name"])
     let name = [imageLocs[currentLineIndex]["name"]]
+
 
     pngDraw
         .data(name)
         .join(
             enter => enter.append("image")
+                .attr("class", "image1")
                 .attr("href", function(d) {return "track_pngs/" + d})
                 .attr("x", 0)
                 .attr("y", 120)
@@ -487,6 +612,7 @@ function updateLineChart()
             update => update
                 .transition()
                 .duration(1000)
+                .attr("class", "image1")
                 .attr("href", function(d) {return "track_pngs/" + d})
                 .attrTween("x", function() {
                     let origin = 350
@@ -502,5 +628,6 @@ function updateLineChart()
             exit => exit.remove()
         )
 
+    
     // draw title for track and also put in png for track 
 }
