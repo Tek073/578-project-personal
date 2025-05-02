@@ -39,7 +39,7 @@ let svgFirstDraw = true;
 document.addEventListener('DOMContentLoaded', function () {} )
 {
     // on load do data preprocess as well as draw
-    Promise.all([d3.csv('data1.csv'), d3.csv("track_wr.csv")])
+    Promise.all([d3.csv('sales-all.csv'), d3.csv("track_wr.csv")])
         .then(function (values) {
             // have data loaded and look at values 
             
@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {} )
             parseFile()
 
             // draw data
-            svg1 = d3.select("#svg1")
-            svg2 = d3.select("#svg2")
+            svg1 = d3.select("#salesChart")
+            svg2 = d3.select("#wrChart")
             barChartDrawInitial()
 
             parseWRData()
@@ -63,12 +63,11 @@ document.addEventListener('DOMContentLoaded', function () {} )
 addEventListener("scroll", (event) => {});
 
 onscroll = (event) => {
-    // console.log(window.scrollY)
+    let barChart = document.getElementById("")
 
     // add scrolly events
     if(window.scrollY > 1000 && window.scrollY < 1200 & svgFirstDraw)
     {
-        console.log("animate bar chart")
         barChartDrawBars()
         svgFirstDraw = false
     }
@@ -327,14 +326,14 @@ function initialWrTimesDraw()
     console.log(minDate + "\n" + maxDate)
     xScaleWrChart = d3.scaleTime([minDate, maxDate], [margin, svgWidth - margin])
 
-    svg2.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .attr("fill", "rgb(235, 198, 52)")
-        .attr("stroke", "black")
-        .style("opacity", 0.4)
+    // svg2.append("rect")
+    //     .attr("x", 0)
+    //     .attr("y", 0)
+    //     .attr("width", svgWidth)
+    //     .attr("height", svgHeight)
+    //     .attr("fill", "rgb(235, 198, 52)")
+    //     .attr("stroke", "black")
+    //     .style("opacity", 0.4)
 
     svg2.append("g")
         .attr("class", "x-axis")
